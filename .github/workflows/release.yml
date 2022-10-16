@@ -1,4 +1,4 @@
-# The way this works is the following:
+fenv# The way this works is the following:
 #
 # The create-release job runs purely to initialize the GitHub release itself
 # and to output upload_url for the following job.
@@ -21,39 +21,13 @@ on:
       - trash
 
 jobs:
-  create-release:
-    name: create-release
-    runs-on: ubuntu-22.04
-    # env:
-      # Set to force version number, e.g., when no tag exists.
-      # RG_VERSION: TEST-0.0.0
-    outputs:
-      upload_url: ${{ steps.release.outputs.upload_url }}
-      rg_version: ${{ env.RG_VERSION }}
-    steps:
-      - name: Get the release version from the tag
-        shell: bash
-        if: env.RG_VERSION == ''
-        run: |
-          # Apparently, this is the right way to get a tag name. Really?
-          #
-          # See: https://github.community/t5/GitHub-Actions/How-to-get-just-the-tag-name/m-p/32167/highlight/true#M1027
-          echo "RG_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-          echo "version is: ${{ env.RG_VERSION }}"
-      - name: Create GitHub release
-        id: release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.RG_VERSION }}
-          release_name: ${{ env.RG_VERSION }}
 
   build-release:
     name: build-release
     needs: ['create-release']
     runs-on: ${{ matrix.os }}
     env:
+      RG_VERSION: ${{ env.GITHUB_SHA }}
       # For some builds, we use cross to test on 32-bit and big-endian
       # systems.
       CARGO: cargo
