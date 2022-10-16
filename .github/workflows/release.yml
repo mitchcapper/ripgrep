@@ -27,7 +27,7 @@ jobs:
     needs: ['create-release']
     runs-on: ${{ matrix.os }}
     env:
-      RG_VERSION: ${{ GITHUB_SHA }}
+      RG_VERSION: ${{ github.sha }}
       # For some builds, we use cross to test on 32-bit and big-endian
       # systems.
       CARGO: cargo
