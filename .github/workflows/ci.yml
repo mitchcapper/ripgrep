@@ -26,14 +26,14 @@ jobs:
       matrix:
         type: ["release", "debug"]
         build:
-  
         - win-msvc
   
         include:
-  
         - build: win-msvc
           os: windows-2022
           rust: nightly
+          target: x86_64-pc-windows-msvc
+
   
     steps:
     - name: Checkout repository
@@ -87,7 +87,7 @@ jobs:
       shell: bash
       run: |
         set +x
-        stderr="$(find "${{ env.TARGET_DIR }}/debug" -name stderr -print0 | xargs -0 ls -t | head -n1)"
+        stderr="$(find "${{ env.TARGET_DIR }}/${{ matrix.type }}" -name stderr -print0 | xargs -0 ls -t | head -n1)"
         if [ -s "$stderr" ]; then
           echo "===== $stderr ===== "
           cat "$stderr"
