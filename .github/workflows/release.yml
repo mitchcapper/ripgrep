@@ -40,7 +40,7 @@ jobs:
       PCRE2_SYS_STATIC: 1
     strategy:
       matrix:
-        build: [win32-msvc]
+        build: [win-msvc]
         include:
         - build: win-msvc
           os: windows-2022
