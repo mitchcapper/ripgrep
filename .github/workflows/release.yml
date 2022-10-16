@@ -1,4 +1,4 @@
-fenv# The way this works is the following:
+# The way this works is the following:
 #
 # The create-release job runs purely to initialize the GitHub release itself
 # and to output upload_url for the following job.
