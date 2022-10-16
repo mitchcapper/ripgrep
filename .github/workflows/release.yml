@@ -24,7 +24,7 @@ jobs:
 
   build-release:
     name: build-release
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-2022
     env:
       RG_VERSION: ${{ github.sha }}
       # For some builds, we use cross to test on 32-bit and big-endian
