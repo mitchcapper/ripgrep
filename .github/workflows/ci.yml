@@ -155,10 +155,10 @@ jobs:
 
     - name: Upload Win artifacts
       if: matrix.os == 'windows-2022'
-      - uses: actions/upload-artifact@v3
-        with:
-          name: WinArt
-          path: ${{ env.TARGET_DIR }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: WinArt
+        path: ${{ env.TARGET_DIR }}
 
 
     - name: Test for existence of build artifacts (Unix)
