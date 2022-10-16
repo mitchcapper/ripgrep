@@ -21,7 +21,9 @@ jobs:
       RUST_BACKTRACE: 1
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
+        type: ["release", ""]
         build:
         # We test ripgrep on a pinned version of Rust, along with the moving
         # targets of 'stable' and 'beta' for good measure.
@@ -116,10 +118,10 @@ jobs:
         echo "target flag is: ${{ env.TARGET_FLAGS }}"
 
     - name: Build ripgrep and all crates
-      run: ${{ env.CARGO }} build --verbose --workspace ${{ env.TARGET_FLAGS }}
+      run: ${{ env.CARGO }} build {{if matrix.type }} --{${{ matrix.type }}{end}} --verbose --workspace ${{ env.TARGET_FLAGS }}
 
     - name: Build ripgrep with PCRE2
-      run: ${{ env.CARGO }} build --verbose --workspace --features pcre2 ${{ env.TARGET_FLAGS }}
+      run: ${{ env.CARGO }} build {{if matrix.type }} --{${{ matrix.type }}{end}} --verbose --workspace --features pcre2 ${{ env.TARGET_FLAGS }}
 
     # This is useful for debugging problems when the expected build artifacts
     # (like shell completions and man pages) aren't generated.
