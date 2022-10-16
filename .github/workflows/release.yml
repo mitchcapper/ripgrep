@@ -24,7 +24,6 @@ jobs:
 
   build-release:
     name: build-release
-    needs: ['create-release']
     runs-on: ${{ matrix.os }}
     env:
       RG_VERSION: ${{ github.sha }}
