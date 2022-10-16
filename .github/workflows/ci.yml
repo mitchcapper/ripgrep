@@ -151,12 +151,15 @@ jobs:
         ls "$outdir/_rg.ps1" && file "$outdir/_rg.ps1"
     
 
+
+
     - name: Upload Win artifacts
       if: matrix.os == 'windows-2022'
       - uses: actions/upload-artifact@v3
         with:
           name: WinArt
-          path: ${{ env.TARGET_DIR }} # or path/to/artifact        
+          path: ${{ env.TARGET_DIR }}
+
 
     - name: Test for existence of build artifacts (Unix)
       if: matrix.os != 'windows-2022'
