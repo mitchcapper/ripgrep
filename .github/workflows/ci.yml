@@ -136,6 +136,37 @@ jobs:
       shell: bash
       run: ci/test-complete
 
+    - name: Build archive
+      shell: bash
+      run: |
+        outdir="$(ci/cargo-out-dir "${{ env.TARGET_DIR }}")"
+        staging="ripgrep-${{ matrix.target }}"
+        mkdir -p "$staging"/{complete,doc}
+
+        cp {README.md,COPYING,UNLICENSE,LICENSE-MIT} "$staging/"
+        cp {CHANGELOG.md,FAQ.md,GUIDE.md} "$staging/doc/"
+        cp "$outdir"/{rg.bash,rg.fish,_rg.ps1} "$staging/complete/"
+        cp complete/_rg "$staging/complete/"
+
+        if [ "${{ matrix.os }}" = "windows-2022" ]; then
+          cp "target/${{ matrix.target }}/${{ matrix.type }}/rg.exe" "$staging/"
+          7z a "$staging.zip" "$staging"
+          echo "ASSET=$staging.zip" >> $GITHUB_ENV
+        else
+          # The man page is only generated on Unix systems. ¯\_(ツ)_/¯
+          cp "$outdir"/rg.1 "$staging/doc/"
+          cp "target/${{ matrix.target }}/${{ matrix.type }}/rg" "$staging/"
+          tar czf "$staging.tar.gz" "$staging"
+          echo "ASSET=$staging.tar.gz" >> $GITHUB_ENV
+        fi
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        path: ${{ env.ASSET }}
+        name: ${{ env.ASSET }}
+
+
   rustfmt:
     name: rustfmt
     runs-on: ubuntu-22.04
