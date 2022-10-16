@@ -19,9 +19,14 @@ jobs:
       TARGET_DIR: ./target
       # Emit backtraces on panics.
       RUST_BACKTRACE: 1
+      # Additional build flags for cargo
+      CARGO_ADDL_FLAGS:
+
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
+        type: ["release", "debug"]
         build:
         # We test ripgrep on a pinned version of Rust, along with the moving
         # targets of 'stable' and 'beta' for good measure.
@@ -79,6 +84,7 @@ jobs:
           rust: nightly
         - build: win-msvc
           os: windows-2022
+          target: x86_64-pc-windows-msvc
           rust: nightly
         - build: win-gnu
           os: windows-2022
@@ -102,7 +108,15 @@ jobs:
       with:
         toolchain: ${{ matrix.rust }}
 
+
+    - name: Set Cargo Addl Build Flags
+      shell: bash
+      if: matrix.type == 'release'
+      run: |
+        echo "CARGO_ADDL_FLAGS=--release" >> $GITHUB_ENV        
+
     - name: Use Cross
+      shell: bash #must set shell otherwise GITHUB_ENV doesnt work for powershell need $env:GITHUB_ENV
       if: matrix.target != ''
       run: |
         cargo install cross
@@ -114,12 +128,13 @@ jobs:
       run: |
         echo "cargo command is: ${{ env.CARGO }}"
         echo "target flag is: ${{ env.TARGET_FLAGS }}"
+        echo "target dir is: ${{ env.TARGET_DIR }}"
 
     - name: Build ripgrep and all crates
-      run: ${{ env.CARGO }} build --verbose --workspace ${{ env.TARGET_FLAGS }}
+      run: ${{ env.CARGO }} build ${{ env.CARGO_ADDL_FLAGS }} --verbose --workspace ${{ env.TARGET_FLAGS }}
 
     - name: Build ripgrep with PCRE2
-      run: ${{ env.CARGO }} build --verbose --workspace --features pcre2 ${{ env.TARGET_FLAGS }}
+      run: ${{ env.CARGO }} build ${{ env.CARGO_ADDL_FLAGS }} --verbose --workspace --features pcre2 ${{ env.TARGET_FLAGS }}
 
     # This is useful for debugging problems when the expected build artifacts
     # (like shell completions and man pages) aren't generated.
@@ -127,7 +142,7 @@ jobs:
       shell: bash
       run: |
         set +x
-        stderr="$(find "${{ env.TARGET_DIR }}/debug" -name stderr -print0 | xargs -0 ls -t | head -n1)"
+        stderr="$(find "${{ env.TARGET_DIR }}/${{ matrix.type }}" -name stderr -print0 | xargs -0 ls -t | head -n1)"
         if [ -s "$stderr" ]; then
           echo "===== $stderr ===== "
           cat "$stderr"
@@ -175,6 +190,37 @@ jobs:
       if: matrix.target == '' && matrix.os != 'windows-2022'
       shell: bash
       run: ci/test-complete
+
+    - name: Build archive
+      shell: bash
+      run: |
+        outdir="$(ci/cargo-out-dir "${{ env.TARGET_DIR }}")"
+        staging="ripgrep-${{ matrix.target }}"
+        mkdir -p "$staging"/{complete,doc}
+
+        cp {README.md,COPYING,UNLICENSE,LICENSE-MIT} "$staging/"
+        cp {CHANGELOG.md,FAQ.md,GUIDE.md} "$staging/doc/"
+        cp "$outdir"/{rg.bash,rg.fish,_rg.ps1} "$staging/complete/"
+        cp complete/_rg "$staging/complete/"
+
+        if [ "${{ matrix.os }}" = "windows-2022" ]; then
+          cp "target/${{ matrix.target }}/${{ matrix.type }}/rg.exe" "$staging/"
+          7z a "$staging.zip" "$staging"
+          echo "ASSET=$staging.zip" >> $GITHUB_ENV
+        else
+          # The man page is only generated on Unix systems. ¯\_(ツ)_/¯
+          cp "$outdir"/rg.1 "$staging/doc/"
+          cp "target/${{ matrix.target }}/${{ matrix.type }}/rg" "$staging/"
+          tar czf "$staging.tar.gz" "$staging"
+          echo "ASSET=$staging.tar.gz" >> $GITHUB_ENV
+        fi
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        path: ${{ env.ASSET }}
+        name: ${{matrix.type}}-${{matrix.build}}-${{ env.ASSET }}
+
 
   rustfmt:
     name: rustfmt
