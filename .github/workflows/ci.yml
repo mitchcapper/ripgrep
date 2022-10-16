@@ -149,6 +149,8 @@ jobs:
       run: |
         outdir="$(ci/cargo-out-dir "${{ env.TARGET_DIR }}")"
         ls "$outdir/_rg.ps1" && file "$outdir/_rg.ps1"
+    
+
     - name: Upload Win artifacts
       if: matrix.os == 'windows-2022'
       - uses: actions/upload-artifact@v3
