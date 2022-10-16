@@ -59,6 +59,8 @@ jobs:
       if: matrix.type == 'release'
       run: |
         echo "CARGO_ADDL_FLAGS=--release" >> $GITHUB_ENV
+        echo "CARGO_ADDL_FLAGS=--release" >> $env:GITHUB_ENV
+        
 
     - name: Use Cross
       if: matrix.target != ''
