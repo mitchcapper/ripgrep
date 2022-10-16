@@ -39,7 +39,6 @@ jobs:
         - nightly-arm
         - macos
         - win-msvc
-        - win-gnu
         include:
         - build: pinned
           os: ubuntu-22.04
@@ -80,9 +79,6 @@ jobs:
         - build: win-msvc
           os: windows-2022
           rust: nightly
-        - build: win-gnu
-          os: windows-2022
-          rust: nightly-x86_64-gnu
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
@@ -153,6 +149,12 @@ jobs:
       run: |
         outdir="$(ci/cargo-out-dir "${{ env.TARGET_DIR }}")"
         ls "$outdir/_rg.ps1" && file "$outdir/_rg.ps1"
+    - name: Upload Win artifacts
+      if: matrix.os == 'windows-2022'
+      - uses: actions/upload-artifact@v3
+        with:
+          name: WinArt
+          path: ${{ env.TARGET_DIR }} # or path/to/artifact        
 
     - name: Test for existence of build artifacts (Unix)
       if: matrix.os != 'windows-2022'
